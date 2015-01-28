@@ -1,17 +1,45 @@
 package com.bignerdranch.android.geoquiz;
 
 import android.support.v7.app.ActionBarActivity;
+import android.app.Activity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.Toast;
 
 
-public class QuizActivity extends ActionBarActivity {
+public class QuizActivity extends Activity {
+
+
+    private Button mTrueButton;
+    private Button mFalseButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_quiz);
+
+        //Set view to True and False Buttons. Implementing OnClickListener for each
+        mTrueButton = (Button)findViewById(R.id.true_button);
+        //Uses anonymous inner class. There is no need for the overhead of a named class
+        // because the class will be used in one place only.
+        mTrueButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                //Since this is in an anonymous inner class, "this" cannot be used as context
+                //"this" refers to OnClickListener, which is why "QuizActivity.this" is called
+                Toast.makeText(QuizActivity.this,R.string.incorrect_toast,Toast.LENGTH_LONG).show();
+            }
+        });
+        mFalseButton = (Button)findViewById(R.id.false_button);
+        mFalseButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(QuizActivity.this,R.string.correct_toast,Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
 
