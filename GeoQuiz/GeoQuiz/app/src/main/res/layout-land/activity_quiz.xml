@@ -12,22 +12,36 @@
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical|center_horizontal"
-        android:orientation="horizontal">
+        android:orientation="vertical"
+        android:layout_gravity="center_vertical|center_horizontal">
 
-        <Button
-            android:id="@+id/true_button"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/true_button"/>
+            android:layout_gravity="center_vertical|center_horizontal"
+            android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/false_button"
+            <Button
+                android:id="@+id/true_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/true_button"/>
+
+            <Button
+                android:id="@+id/false_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/false_button"/>
+
+            </LinearLayout>
+
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/false_button"/>
+            android:id="@+id/Api_Text"
+            android:layout_gravity="center_horizontal"/>
 
-        </LinearLayout>
+    </LinearLayout>
 
     <Button
         android:id="@+id/next_button"

@@ -6,11 +6,13 @@ package com.bignerdranch.android.geoquiz;
 public class TrueFalse {
     private int mQuestion;
 
+    private boolean mHasCheated;
     private boolean mTrueQuestion;
 
     public TrueFalse(int question, boolean trueQuestion){
         setQuestion(question);
         setTrueQuestion(trueQuestion);
+        setHasCheated(false);
     }
 
     public boolean isTrueQuestion() {
@@ -27,5 +29,13 @@ public class TrueFalse {
 
     public void setQuestion(int question) {
         mQuestion = question;
+    }
+
+    public boolean hasCheated() {
+        return mHasCheated;
+    }
+
+    public void setHasCheated(boolean hasCheated) {
+        mHasCheated = hasCheated;
     }
 }

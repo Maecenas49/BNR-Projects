@@ -1,7 +1,11 @@
 package com.bignerdranch.android.geoquiz;
 
+import android.annotation.TargetApi;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
 import android.content.Intent;
 import android.media.Image;
+import android.os.Build;
 import android.support.v7.app.ActionBarActivity;
 import android.app.Activity;
 import android.os.Bundle;
@@ -15,7 +19,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
-public class QuizActivity extends Activity {
+public class QuizActivity extends ActionBarActivity {
 
     private static final String TAG = "QuizActivity";
     private static final String KEY_INDEX = "index";
@@ -26,6 +30,7 @@ public class QuizActivity extends Activity {
     private Button mPrevButton;
     private Button mCheatButton;
     private TextView mQuestionTextView;
+    private TextView mApiTextView;
 
     private TrueFalse[] mQuestionBank = new TrueFalse[]{
             new TrueFalse(R.string.question_oceans,true),
@@ -37,6 +42,19 @@ public class QuizActivity extends Activity {
 
     private int mCurrentIndex = 0;
 
+    private boolean mIsCheater;
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d(TAG, "OnActivityResult called");
+        if (data == null){
+            return;
+        }
+        mIsCheater = data.getBooleanExtra(CheatActivity.EXTRA_ANSWER_SHOWN, false);
+        mQuestionBank[mCurrentIndex].setHasCheated(mIsCheater);
+        //Log.d(TAG, String.format("Retreived result from CheatActivity, mIsCheater set to %b", mIsCheater));
+    }
+
     private void updateQuestion(){
         int question = mQuestionBank[mCurrentIndex].getQuestion();
         mQuestionTextView.setText(question);
@@ -47,19 +65,28 @@ public class QuizActivity extends Activity {
 
         int messageResId = 0;
 
-        if (userPressedTrue == answerIsTrue){
-            messageResId = R.string.correct_toast;
-        } else{
-            messageResId = R.string.incorrect_toast;
+        if (mQuestionBank[mCurrentIndex].hasCheated()) {
+            messageResId = R.string.judgment_toast;
+        }else {
+            if (userPressedTrue == answerIsTrue) {
+                messageResId = R.string.correct_toast;
+            } else {
+                messageResId = R.string.incorrect_toast;
+            }
         }
-
         Toast.makeText(this,messageResId,Toast.LENGTH_SHORT).show();
     }
 
+    @TargetApi(11)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_quiz);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            ActionBar actionBar = getSupportActionBar();
+            actionBar.setSubtitle("Bodies of Water");
+        }
 
         if (savedInstanceState != null){
             mCurrentIndex = savedInstanceState.getInt(KEY_INDEX, 0);
@@ -102,7 +129,7 @@ public class QuizActivity extends Activity {
                 Intent i = new Intent(QuizActivity.this, CheatActivity.class);
                 boolean answerIsTrue = mQuestionBank[mCurrentIndex].isTrueQuestion();
                 i.putExtra(CheatActivity.EXTRA_ANSWER_IS_TRUE, answerIsTrue);
-                startActivity(i);
+                startActivityForResult(i, 0);
             }
         });
 
@@ -111,6 +138,7 @@ public class QuizActivity extends Activity {
             @Override
             public void onClick(View v) {
                 mCurrentIndex = (mCurrentIndex + 1) % mQuestionBank.length;
+                mIsCheater = false;
                 updateQuestion();
             }
         });
@@ -124,6 +152,9 @@ public class QuizActivity extends Activity {
             }
         });
         updateQuestion();
+
+        mApiTextView = (TextView) findViewById(R.id.Api_Text);
+        mApiTextView.setText(String.format("API Level %d", Build.VERSION.SDK_INT));
     }
 
     @Override
