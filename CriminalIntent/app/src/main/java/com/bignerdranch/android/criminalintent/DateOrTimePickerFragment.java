@@ -24,7 +24,7 @@ public class DateOrTimePickerFragment extends DialogFragment {
 
     private static final String DATE_DIALOG = "Date";
 
-    public Fragment newInstance(Date date){
+    public static DateOrTimePickerFragment newInstance(Date date){
         Bundle args = new Bundle();
         args.putSerializable(DatePickerFragment.EXTRA_DATE, date);
 
@@ -40,7 +40,7 @@ public class DateOrTimePickerFragment extends DialogFragment {
 
         mDate = (Date)getArguments().getSerializable(DatePickerFragment.EXTRA_DATE);
 
-        View v = (View) getActivity().getLayoutInflater()
+        View v = getActivity().getLayoutInflater()
                 .inflate(R.layout.dialog_date_time, null);
 
         mDateButton = (Button)getActivity().findViewById(R.id.select_date_picker);
