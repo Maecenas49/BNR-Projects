@@ -52,7 +52,7 @@ public class DatePickerFragment extends DialogFragment {
         mDate = (Date)getArguments().getSerializable(EXTRA_DATE);
 
         //Create a Calendar to get the year, month, and day
-        Calendar calendar = Calendar.getInstance();
+        final Calendar calendar = Calendar.getInstance();
         calendar.setTime(mDate);
         int year = calendar.get(Calendar.YEAR);
         int month = calendar.get(Calendar.MONTH);
@@ -66,8 +66,10 @@ public class DatePickerFragment extends DialogFragment {
             @Override
             public void onDateChanged(DatePicker view, int year, int month, int day) {
                 //Translate year, month, day, into a Date object using a calendar
-                mDate = new GregorianCalendar(year, month, day).getTime();
-
+                calendar.set(Calendar.MONTH, month);
+                calendar.set(Calendar.YEAR, year);
+                calendar.set(Calendar.DAY_OF_MONTH, day);
+                mDate = calendar.getTime();
                 //Update argument to preserve selected value on rotation
                 getArguments().putSerializable(EXTRA_DATE, mDate);
             }

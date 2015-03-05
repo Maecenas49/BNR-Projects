@@ -2,16 +2,14 @@ package com.bignerdranch.android.criminalintent;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.Intent;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.view.View;
 import android.widget.Button;
 
-import java.util.Calendar;
 import java.util.Date;
 
 /**
@@ -19,10 +17,9 @@ import java.util.Date;
  */
 public class DateOrTimePickerFragment extends DialogFragment {
     private Date mDate;
-    private Button mDateButton;
-    private Button mTimeButton;
 
     private static final String DATE_DIALOG = "Date";
+    private static final String TIME_DIALOG = "Time";
 
     public static DateOrTimePickerFragment newInstance(Date date){
         Bundle args = new Bundle();
@@ -40,24 +37,31 @@ public class DateOrTimePickerFragment extends DialogFragment {
 
         mDate = (Date)getArguments().getSerializable(DatePickerFragment.EXTRA_DATE);
 
-        View v = getActivity().getLayoutInflater()
-                .inflate(R.layout.dialog_date_time, null);
+        AlertDialog dialog = new AlertDialog.Builder(getActivity())
+                .setPositiveButton(R.string.select_date_text, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        //Call Date Picker Fragment
+                        FragmentManager fm = getActivity().getSupportFragmentManager();
 
-        mDateButton = (Button)getActivity().findViewById(R.id.select_date_picker);
-        mDateButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                FragmentManager fm = getActivity().getSupportFragmentManager();
+                        DatePickerFragment dateDialog = DatePickerFragment.newInstance(mDate);
+                        dateDialog.setTargetFragment(getTargetFragment(), getTargetRequestCode());
+                        dateDialog.show(fm,DATE_DIALOG);
+                    }
+                })
+                .setNegativeButton(R.string.select_time_text, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        //Call Time Picker Fragment
+                        FragmentManager fm = getActivity().getSupportFragmentManager();
 
-                DatePickerFragment dialog = DatePickerFragment.newInstance(mDate);
-                dialog.setTargetFragment(getTargetFragment(), getTargetRequestCode());
-                dialog.show(fm, DATE_DIALOG);
-
-            }
-        });
-
-        return new AlertDialog.Builder(getActivity())
-                .setView(v)
+                        TimePickerFragment timeDialog = TimePickerFragment.newInstance(mDate);
+                        timeDialog.setTargetFragment(getTargetFragment(), getTargetRequestCode());
+                        timeDialog.show(fm, TIME_DIALOG);
+                    }
+                })
                 .setTitle(R.string.select_date_time).create();
-    }
+
+        return dialog;
+        }
 }

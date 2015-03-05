@@ -8,6 +8,7 @@
     <string name="crime_solved_label">Solved?</string>
     <string name="crimes_title">Crimes</string>
     <string name="date_picker_title">Date of crime:</string>
+    <string name="time_picker_title">Time of crime:</string>
     <string name="select_date_text">Date</string>
     <string name="select_time_text">Time</string>
     <string name="select_date_time">Choose which to edit:</string>
