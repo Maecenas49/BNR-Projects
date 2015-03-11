@@ -23,6 +23,7 @@ public class CrimePagerActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         mViewPager = new ViewPager(this);
         mViewPager.setId(R.id.viewPager);
+
         setContentView(mViewPager);
 
         mCrimes = CrimeLab.get(this).getCrimes();
