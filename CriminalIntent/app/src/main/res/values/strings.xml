@@ -17,4 +17,6 @@
     <string name="select_date_text">Date</string>
     <string name="select_time_text">Time</string>
     <string name="select_date_time">Choose which to edit:</string>
+    <string name="no_results">No Crimes Reported</string>
+    <string name="add_new_crime">Add a new crime</string>
 </resources>
