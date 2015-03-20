@@ -12,7 +12,10 @@ import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBarActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,6 +39,8 @@ public class CrimeFragment extends Fragment {
 
     private static final String DIALOG_DATE_OR_TIME = "dateortime";
     private static final int REQUEST_DATE = 0;
+    private static final String DIALOG_CONFIRM_DELETE = "confirmdelete";
+    private static final int DELETE_CODE = 1;
 
     private Crime mCrime;
     private EditText mTitleField;
@@ -133,11 +138,24 @@ public class CrimeFragment extends Fragment {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case R.id.crime_fragment_delete_crime:
+                FragmentManager fm = getActivity().getSupportFragmentManager();
+
+                ConfirmDeleteFragment dialog = ConfirmDeleteFragment.newInstance(mCrime.getId());
+                dialog.setTargetFragment(CrimeFragment.this, DELETE_CODE);
+                dialog.show(fm, DIALOG_CONFIRM_DELETE);
+                return true;
+/*
+
+CrimeLab crimeLab = CrimeLab.get(getActivity());
+crimeLab.deleteCrime(mCrime);
+crimeLab.saveCrimes();
+*/
             case android.R.id.home:
                 if(NavUtils.getParentActivityName(getActivity()) != null){
                     NavUtils.navigateUpFromSameTask(getActivity());
+                    return true;
                 }
-                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -159,4 +177,12 @@ public class CrimeFragment extends Fragment {
 
         }
     }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.fragment_crime_menu, menu);
+    }
+
+
 }

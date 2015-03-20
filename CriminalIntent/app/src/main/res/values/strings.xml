@@ -19,4 +19,7 @@
     <string name="select_date_time">Choose which to edit:</string>
     <string name="no_results">No Crimes Reported</string>
     <string name="add_new_crime">Add a new crime</string>
+    <string name="yes_text">Yes</string>
+    <string name="no_text">No</string>
+    <string name="confirm_delete">Delete Crime?</string>
 </resources>
