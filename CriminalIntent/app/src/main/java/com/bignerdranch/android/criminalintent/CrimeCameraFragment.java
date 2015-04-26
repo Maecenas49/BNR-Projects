@@ -1,6 +1,9 @@
 package com.bignerdranch.android.criminalintent;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.hardware.Camera;
 import android.hardware.Camera.Size;
 import android.os.Build;
@@ -16,8 +19,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Created by Mike on 3/23/2015.
@@ -27,8 +32,60 @@ import java.util.List;
 public class CrimeCameraFragment extends Fragment {
     private static final String TAG = "CrimeCameraFragment";
 
+    public static final String EXTRA_PHOTO_FILENAME =
+            "com.bignerdranch.android.criminalintent.photo_filename";
+    public static final String EXTRA_PHOTO_ORIENTATION =
+            "com.bignerdranch.android.criminalintent.photo_orientation";
+
     private Camera mCamera;
     private SurfaceView mSurfaceView;
+    private View mProgressContainer;
+
+    private Camera.ShutterCallback mShutterCallback = new Camera.ShutterCallback(){
+        public void onShutter(){
+            //Display progress indicator
+            mProgressContainer.setVisibility(View.VISIBLE);
+        }
+    };
+
+    private Camera.PictureCallback mPJpegCallback = new Camera.PictureCallback(){
+        public void onPictureTaken(byte[] data, Camera camera){
+            //Create a filename
+            String filename = UUID.randomUUID().toString() + ".jpeg";
+            //Save the jpeg data to disk
+            FileOutputStream os = null;
+            boolean success = true;
+
+            try{
+                os = getActivity().openFileOutput(filename, Context.MODE_PRIVATE);
+                os.write(data);
+            }catch (Exception e){
+                Log.e(TAG, "Error writing to file " + filename, e);
+                success = false;
+            }finally{
+                try{
+                    if (os != null)
+                        os.close();
+                } catch (Exception e){
+                    Log.e(TAG, "Error closing file " + filename, e);
+                    success = false;
+                }
+            }
+
+            if (success){
+                //Set the photo filename on the result intent
+                Intent i = new Intent();
+                i.putExtra(EXTRA_PHOTO_FILENAME, filename);
+                int orientation = ((CrimeCameraActivity)getActivity()).getOrientation();
+                i.putExtra(EXTRA_PHOTO_ORIENTATION,orientation);
+                Log.d(TAG, "Captured Orientation: " + orientation);
+                getActivity().setResult(Activity.RESULT_OK, i);
+            }else{
+                getActivity().setResult(Activity.RESULT_CANCELED);
+            }
+            getActivity().finish();
+        }
+    };
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -40,9 +97,14 @@ public class CrimeCameraFragment extends Fragment {
         takePictureButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getActivity().finish();
+                if (mCamera != null){
+                    mCamera.takePicture(mShutterCallback, null, mPJpegCallback);
+                }
             }
         });
+
+        mProgressContainer = v.findViewById(R.id.crime_camera_progressContainer);
+        mProgressContainer.setVisibility(View.INVISIBLE);
 
         mSurfaceView = (SurfaceView)v.findViewById(R.id.crime_camera_surfaceView);
         SurfaceHolder holder =  mSurfaceView.getHolder();
@@ -73,6 +135,8 @@ public class CrimeCameraFragment extends Fragment {
                 Camera.Parameters parameters = mCamera.getParameters();
                 Size s = getBestSupportedSize(parameters.getSupportedPreviewSizes(), width, height); //To be reset in the next section
                 parameters.setPreviewSize(s.width, s.height);
+                s = getBestSupportedSize(parameters.getSupportedPictureSizes(), width, height);
+                parameters.setPictureSize(s.width, s.height);
                 mCamera.setParameters(parameters);
                 try{
                     mCamera.startPreview();
