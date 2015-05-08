@@ -5,11 +5,14 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.database.Cursor;
 import android.graphics.drawable.BitmapDrawable;
 import android.hardware.Camera;
 import android.media.Image;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -17,6 +20,7 @@ import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBarActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -31,6 +35,7 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import java.lang.annotation.Target;
 import java.util.Date;
@@ -50,6 +55,7 @@ public class CrimeFragment extends Fragment {
     private static final String DIALOG_CONFIRM_DELETE = "confirmdelete";
     private static final int DELETE_CODE = 1;
     private static final int REQUEST_PHOTO = 2;
+    private static final int REQUEST_CONTACT = 3;
     private static final String DIALOG_IMAGE = "image";
 
     private Crime mCrime;
@@ -58,6 +64,9 @@ public class CrimeFragment extends Fragment {
     private CheckBox mSolvedCheckBox;
     private ImageButton mPhotoButton;
     private ImageView mPhotoView;
+    private Button mReportButton;
+    private Button mSuspectButton;
+    private Button mCallSuspectButton;
 
     public static CrimeFragment newInstance(UUID crimeId) {
         Bundle args = new Bundle();
@@ -163,12 +172,25 @@ public class CrimeFragment extends Fragment {
             mPhotoButton.setEnabled(false);
         }
 
+//        View.OnLongClickListener longClickListener = new View.OnLongClickListener() {
+//            @Override
+//            public boolean onLongClick(View v) {
+//                switch (v.getId()){
+//                    case R.id.crime_imageView:
+//
+//                        return true;
+//                    default: return false;
+//                }
+//            }
+//        };
+
         mPhotoView = (ImageView)v.findViewById(R.id.crime_imageView);
+        registerForContextMenu(mPhotoView);
         mPhotoView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Photo p = mCrime.getPhoto();
-                if (p == null){
+                if (p == null) {
                     return;
                 }
 
@@ -177,6 +199,48 @@ public class CrimeFragment extends Fragment {
                 ImageFragment.newInstance(path, p.getOrientation()).show(fm, DIALOG_IMAGE);
             }
         });
+
+        mReportButton = (Button)v.findViewById(R.id.crime_reportButton);
+        mReportButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(Intent.ACTION_SEND);
+                i.setType("text/plain");
+                i.putExtra(Intent.EXTRA_TEXT, getCrimeReport());
+                i.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.crime_report_subject));
+                i = Intent.createChooser(i, getString(R.string.send_report));
+                startActivity(i);
+            }
+        });
+
+        mCallSuspectButton = (Button)v.findViewById(R.id.crime_callButton);
+        mCallSuspectButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(mCrime.getSuspectNumber() == null){
+                    //show Toast indicating no number
+                    Toast.makeText(getActivity(),
+                            R.string.crime_no_number, Toast.LENGTH_SHORT).show();
+                } else {
+                    Log.d(TAG, "Number: " + mCrime.getSuspectNumber());
+                    Intent i = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + mCrime.getSuspectNumber()));
+                    startActivity(i);
+                }
+            }
+        });
+
+        mSuspectButton = (Button)v.findViewById(R.id.crime_suspectButton);
+        mSuspectButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
+                startActivityForResult(i, REQUEST_CONTACT);
+            }
+        });
+
+        if (mCrime.getSuspect() != null){
+            mSuspectButton.setText(mCrime.getSuspect());
+        }
 
         return v;
     }
@@ -250,9 +314,64 @@ crimeLab.saveCrimes();
             int orientation = data.getIntExtra(CrimeCameraFragment.EXTRA_PHOTO_ORIENTATION, 0);
             if (filename != null){
                 Photo p = new Photo(filename, orientation);
+                if (mCrime.getPhoto() != null){
+                    mCrime.replacePhoto(getActivity(), p);
+                    Log.d(TAG, "Replaced old Photo");
+                }else{
                 mCrime.setPhoto(p);
+                }
                 showPhoto();
             }
+        } else if (requestCode == REQUEST_CONTACT) {
+            Uri contactUri = data.getData();
+
+            //Specify which fields you want you query to return values for.
+            String[] queryFields = new String[] {
+                    ContactsContract.Contacts.DISPLAY_NAME, ContactsContract.Contacts._ID,
+                    ContactsContract.Contacts.HAS_PHONE_NUMBER
+            };
+            //Perform your query = the contactUri is like the "where" clause here
+            Cursor c = getActivity().getContentResolver()
+                    .query(contactUri, queryFields, null, null, null);
+
+            //Double-check that you actually got results
+            if (c.getCount() == 0){
+                c.close();
+                return;
+            }
+
+            //Pull out the first column of the first row of data - this is your suspect's name
+            c.moveToFirst();
+            String suspect = c.getString(c.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+            //Pull out the second column of the first row of data - the suspect's ID
+            String suspect_ID = c.getString(c.getColumnIndex(ContactsContract.Contacts._ID));
+
+            //Find the suspects number
+            if (Integer.parseInt(c.getString(
+                    c.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0){
+                Cursor phoneCursor = getActivity().getContentResolver()
+                        .query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
+                                ContactsContract.CommonDataKinds.Phone.CONTACT_ID +" = ?",
+                                new String[]{suspect_ID}, null);
+
+                //Double-check that you actually got results
+                if (phoneCursor.getCount() == 0){
+                    phoneCursor.close();
+                } else {
+                    phoneCursor.moveToFirst();
+                    String suspectNumber = phoneCursor.getString(
+                            phoneCursor.getColumnIndex(
+                                    ContactsContract.CommonDataKinds.Phone.NUMBER));
+
+                    //Log.d(TAG, "Set suspect number to " + suspectNumber);
+                    mCrime.setSuspectNumber(suspectNumber);
+                    phoneCursor.close();
+                }
+            }
+
+            mCrime.setSuspect(suspect);
+            mSuspectButton.setText(suspect);
+            c.close();
         }
     }
 
@@ -262,5 +381,50 @@ crimeLab.saveCrimes();
         inflater.inflate(R.menu.fragment_crime_menu, menu);
     }
 
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        MenuInflater inflater = getActivity().getMenuInflater();
+        switch (v.getId()){
+            case R.id.crime_imageView:
+                inflater.inflate(R.menu.delete_photo_context, menu);
+        }
+    }
 
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.menu_item_delete_photo:
+                mCrime.removePhoto(getActivity());
+                PictureUtils.cleanImageView(mPhotoView);
+                return true;
+            default:
+                return super.onContextItemSelected(item);
+        }
+    }
+
+    private String getCrimeReport(){
+        String solvedString = null;
+        if(mCrime.isSolved()){
+            solvedString = getString(R.string.crime_report_solved);
+        }else{
+            solvedString = getString(R.string.crime_report_unsolved);
+        }
+
+        String dateFormat = "EEE, MMM dd";
+        String dateString = DateFormat.format(dateFormat, mCrime.getDate()).toString();
+
+        String suspect = mCrime.getSuspect();
+        if (suspect == null) {
+            suspect = getString(R.string.crime_report_no_suspect);
+        } else{
+            suspect = getString(R.string.crime_report_suspect, suspect);
+        }
+
+        String report = getString(R.string.crime_report,
+                mCrime.getTitle(), dateString, solvedString, suspect);
+
+        return report;
+
+    }
 }

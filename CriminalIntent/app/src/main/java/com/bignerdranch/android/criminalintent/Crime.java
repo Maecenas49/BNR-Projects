@@ -1,5 +1,6 @@
 package com.bignerdranch.android.criminalintent;
 
+import android.app.Activity;
 import android.content.Context;
 import android.text.format.DateFormat;
 
@@ -19,12 +20,16 @@ public class Crime {
     private static final String JSON_SOLVED = "solved";
     private static final String JSON_DATE = "date";
     private static final String JSON_PHOTO = "photo";
+    private static final String JSON_SUSPECT = "suspect";
+    private static final String JSON_NUMBER = "number";
 
     private UUID mId;
     private String mTitle;
     private Date mDate;
     private boolean mSolved;
     private Photo mPhoto;
+    private String mSuspect;
+    private String mNumber;
 
     public Crime(){
         //Generate unique identifier
@@ -42,6 +47,12 @@ public class Crime {
         if (json.has(JSON_PHOTO)){
             mPhoto = new Photo(json.getJSONObject(JSON_PHOTO));
         }
+        if (json.has(JSON_SUSPECT)){
+            mSuspect = json.getString(JSON_SUSPECT);
+        }
+        if (json.has(JSON_NUMBER)){
+            mNumber = json.getString(JSON_NUMBER);
+        }
     }
 
     public JSONObject toJSON() throws JSONException{
@@ -53,6 +64,8 @@ public class Crime {
         if (mPhoto != null){
             json.put(JSON_PHOTO, mPhoto.toJSON());
         }
+        json.put(JSON_SUSPECT, mSuspect);
+        json.put(JSON_NUMBER, mNumber);
         return json;
     }
 
@@ -101,4 +114,31 @@ public class Crime {
     public void setPhoto(Photo p){
         mPhoto = p;
     }
+
+    public void removePhoto(Activity a){
+        a.deleteFile(mPhoto.getFilename());
+        setPhoto(null);
+    }
+
+    public void replacePhoto(Activity a, Photo p){
+        removePhoto(a);
+        setPhoto(p);
+    }
+
+    public String getSuspect(){
+        return mSuspect;
+    }
+
+    public void setSuspect(String suspect){
+        mSuspect = suspect;
+    }
+
+    public void setSuspectNumber(String number){
+        mNumber = number;
+    }
+
+    public String getSuspectNumber(){
+        return mNumber;
+    }
+
 }
