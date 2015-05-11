@@ -53,6 +53,7 @@ public class ConfirmDeleteFragment extends DialogFragment {
                         Crime crime = crimeLab.getCrime(mCrimeId);
                         crimeLab.deleteCrime(crime);
                         crimeLab.saveCrimes();
+                        //TODO: Figure out the onCrimeDeleted Callback
                         sendResult(Activity.RESULT_OK);
 
                         getActivity().finish();

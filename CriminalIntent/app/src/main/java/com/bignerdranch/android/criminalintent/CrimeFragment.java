@@ -67,6 +67,27 @@ public class CrimeFragment extends Fragment {
     private Button mReportButton;
     private Button mSuspectButton;
     private Button mCallSuspectButton;
+    private Callbacks mCallbacks;
+
+    /**
+     * Required interface for hosting activities
+     */
+    public interface Callbacks{
+        void onCrimeUpdated(Crime crime);
+        void onCrimeDeleted(Crime crime);
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        mCallbacks = (Callbacks)activity;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mCallbacks = null;
+    }
 
     public static CrimeFragment newInstance(UUID crimeId) {
         Bundle args = new Bundle();
@@ -115,6 +136,8 @@ public class CrimeFragment extends Fragment {
         mTitleField.addTextChangedListener(new TextWatcher() {
             public void onTextChanged(CharSequence c, int start, int before, int count) {
                 mCrime.setTitle(c.toString());
+                mCallbacks.onCrimeUpdated(mCrime);
+                getActivity().setTitle(mCrime.getTitle());
             }
 
             public void beforeTextChanged(CharSequence c, int start, int count, int after) {
@@ -150,6 +173,7 @@ public class CrimeFragment extends Fragment {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 //Set crime's solved property
                 mCrime.setSolved(isChecked);
+                mCallbacks.onCrimeUpdated(mCrime);
             }
         });
 
@@ -307,6 +331,7 @@ crimeLab.saveCrimes();
         if (requestCode == REQUEST_DATE){
             Date date = (Date)data.getSerializableExtra(DatePickerFragment.EXTRA_DATE);
             mCrime.setDate(date);
+            mCallbacks.onCrimeUpdated(mCrime);
             updateDate();
         } else if (requestCode == REQUEST_PHOTO) {
             //Create a new Photo object and attach it to the crime
@@ -320,6 +345,7 @@ crimeLab.saveCrimes();
                 }else{
                 mCrime.setPhoto(p);
                 }
+                mCallbacks.onCrimeUpdated(mCrime);
                 showPhoto();
             }
         } else if (requestCode == REQUEST_CONTACT) {
@@ -370,6 +396,7 @@ crimeLab.saveCrimes();
             }
 
             mCrime.setSuspect(suspect);
+            mCallbacks.onCrimeUpdated(mCrime);
             mSuspectButton.setText(suspect);
             c.close();
         }
