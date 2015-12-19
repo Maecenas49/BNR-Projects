@@ -1,15 +1,16 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="AppTheme" parent="Theme.AppCompat.Light">
     </style>
 
     <style name="RemoteButton">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">match_parent</item>
-        <item name="android:textColor">#556699</item>
         <item name="android:textSize">20dp</item>
         <item name="android:layout_margin">3dp</item>
+        <item name="android:background">@drawable/button_shape_shadowed</item>
+        <item name="android:textColor">@drawable/button_text_color</item>
     </style>
 
     <style name="RemoteButton.SpecialButton">
